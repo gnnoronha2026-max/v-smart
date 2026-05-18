@@ -72,10 +72,10 @@ export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyn
 
   // private: true → nota privada (visível só para agentes, não reenvia para o WhatsApp)
   await postOutgoingMessage(config, conversationId, content, { private: true })
-  await addConversationLabels(config, conversationId, [campaignName.toLowerCase().replace(/\s+/g, '-')])
 
   if (chatwootLabel) {
     await addContactLabels(config, contactId, [chatwootLabel])
+    await addConversationLabels(config, conversationId, [chatwootLabel])
   }
 
   if (chatwootAgentId) {
