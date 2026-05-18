@@ -121,6 +121,8 @@ export async function POST(request: Request) {
       flowId: data.flowId,  // Flow/MiniApp reference (se o template usar Flow)
       flowName: data.flowName,
       folderId: data.folderId,  // Organização por pasta
+      chatwootSync: data.chatwootSync,
+      chatwootLabel: data.chatwootLabel,
     })
 
     // If contacts were provided, add them to campaign_contacts

@@ -123,6 +123,9 @@ export interface Campaign {
   folderId?: string | null;
   folder?: CampaignFolder | null;
   tags?: CampaignTag[];
+  // Integração Chatwoot
+  chatwootSync?: boolean;
+  chatwootLabel?: string | null;
 }
 
 export interface Contact {

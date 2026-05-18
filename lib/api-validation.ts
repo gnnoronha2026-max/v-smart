@@ -128,6 +128,9 @@ export const CreateCampaignSchema = z.object({
   flowName: z.string().max(200).optional().nullable(),
   // Organização
   folderId: z.string().uuid().optional().nullable(),
+  // Integração Chatwoot
+  chatwootSync: z.boolean().optional().default(false),
+  chatwootLabel: z.string().optional().nullable(),
 })
 
 export const UpdateCampaignSchema = z.object({

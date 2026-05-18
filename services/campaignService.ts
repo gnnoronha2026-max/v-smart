@@ -33,6 +33,9 @@ interface CreateCampaignInput {
   flowName?: string | null;
   // Organização
   folderId?: string | null;
+  // Integração Chatwoot
+  chatwootSync?: boolean;
+  chatwootLabel?: string | null;
   // Se true, salva como rascunho sem disparar
   isDraft?: boolean;
 }

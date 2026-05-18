@@ -82,6 +82,8 @@ export const useCampaignNewController = () => {
   const [scheduleDate, setScheduleDate] = useState(() => new Date().toLocaleDateString('en-CA'))
   const [scheduleTime, setScheduleTime] = useState(() => getDefaultScheduleTime())
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  const [chatwootSync, setChatwootSync] = useState(false)
+  const [chatwootLabel, setChatwootLabel] = useState('')
   const userTimeZone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, [])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [templateVars, setTemplateVars] = useState<{ header: TemplateVar[]; body: TemplateVar[] }>({
@@ -712,6 +714,8 @@ export const useCampaignNewController = () => {
         flowId,
         flowName,
         folderId: selectedFolderId,
+        chatwootSync,
+        chatwootLabel: chatwootLabel.trim() || null,
       })
 
       router.push(`/campaigns/${campaign.id}`)
@@ -755,6 +759,8 @@ export const useCampaignNewController = () => {
         flowId,
         flowName,
         folderId: selectedFolderId,
+        chatwootSync,
+        chatwootLabel: chatwootLabel.trim() || null,
         isDraft: true, // <-- Salva como rascunho
       })
 
@@ -1570,6 +1576,12 @@ export const useCampaignNewController = () => {
     setSelectedFolderId,
     folders,
     isFoldersLoading,
+
+    // Chatwoot
+    chatwootSync,
+    setChatwootSync,
+    chatwootLabel,
+    setChatwootLabel,
 
     // Launch
     isLaunching,

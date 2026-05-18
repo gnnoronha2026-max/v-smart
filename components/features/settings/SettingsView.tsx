@@ -10,6 +10,7 @@ import { FlowEndpointPanel } from './FlowEndpointPanel';
 import { CredentialsForm } from './CredentialsForm';
 import { UpstashConfigPanel } from './UpstashConfigPanel';
 import { ApiDocsPanel } from './ApiDocsPanel';
+import { ChatwootPanel } from './ChatwootPanel';
 import { useDevMode } from '@/components/providers/DevModeProvider';
 import type { SettingsViewProps } from './types';
 
@@ -207,6 +208,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* 5. API Documentation Link */}
         {settings.isConnected && <ApiDocsPanel />}
+
+        {/* 6. Chatwoot Integration */}
+        {settings.isConnected && <ChatwootPanel />}
 
         {/* ========== SEÇÕES DEV-ONLY ABAIXO ========== */}
 

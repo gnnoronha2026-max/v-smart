@@ -1398,6 +1398,46 @@ export default function CampaignsNewRealPage() {
             </div>
           )}
 
+          {/* Chatwoot: sincronização de campanha */}
+          {ctrl.step === 4 && (
+            <div className="rounded-2xl border border-[var(--ds-border-default)] bg-[var(--ds-bg-surface)] p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-[var(--ds-text-primary)]">Sincronizar com Chatwoot</div>
+                  <p className="text-xs text-[var(--ds-text-secondary)]">
+                    Espelha as entregas desta campanha no Chatwoot e cria conversas automaticamente.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={ctrl.chatwootSync}
+                  onClick={() => ctrl.setChatwootSync(!ctrl.chatwootSync)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
+                    ctrl.chatwootSync
+                      ? 'border-emerald-400 bg-emerald-600'
+                      : 'border-[var(--ds-border-default)] bg-[var(--ds-bg-hover)]'
+                  }`}
+                >
+                  <span className={`inline-block size-4 rounded-full transition ${ctrl.chatwootSync ? 'translate-x-6 bg-white' : 'translate-x-1 bg-[var(--ds-text-muted)]'}`} />
+                </button>
+              </div>
+              {ctrl.chatwootSync && (
+                <div className="mt-4 space-y-1">
+                  <label className="text-xs font-medium text-[var(--ds-text-secondary)]">Etiqueta no Chatwoot (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="ex: campanha-maio"
+                    value={ctrl.chatwootLabel}
+                    onChange={(e) => ctrl.setChatwootLabel(e.target.value)}
+                    className="w-full rounded-lg border border-[var(--ds-border-default)] bg-[var(--ds-bg-elevated)] px-3 py-2 text-sm text-[var(--ds-text-primary)] outline-none transition focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
+                  />
+                  <p className="text-xs text-[var(--ds-text-muted)]">Etiqueta aplicada ao contato e à conversa no Chatwoot ao confirmar entrega.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <ContactQuickEditModal
             isOpen={Boolean(ctrl.quickEditContactId)}
             contactId={ctrl.quickEditContactId}

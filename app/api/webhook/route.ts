@@ -42,6 +42,10 @@ import {
   handleDeliveryStatus,
 } from '@/lib/inbox/inbox-webhook'
 
+// Chatwoot: espelho de campanhas + forward de mensagens entrantes
+import { syncCampaignDeliveryToChatwoot } from '@/lib/chatwoot-sync'
+import { forwardToChatwoot } from '@/lib/chatwoot-forwarder'
+
 // Get WhatsApp Access Token from centralized helper
 async function getWhatsAppAccessToken(): Promise<string | null> {
   const credentials = await getWhatsAppCredentials()
@@ -903,6 +907,36 @@ export async function POST(request: NextRequest) {
               console.warn('[Webhook] Failed to update inbox delivery status:', inboxError)
             }
 
+            // Chatwoot: espelha entrega confirmada na conversa do contato
+            if (result.reason === 'applied' && status === 'delivered' && result.campaignId) {
+              try {
+                const { data: campaignData } = await supabase
+                  .from('campaigns')
+                  .select('name, chatwoot_sync, chatwoot_label, template_snapshot, template_variables')
+                  .eq('id', result.campaignId)
+                  .single()
+
+                if (campaignData?.chatwoot_sync) {
+                  const { data: contactData } = await supabase
+                    .from('campaign_contacts')
+                    .select('name')
+                    .eq('id', result.campaignContactId)
+                    .single()
+
+                  void syncCampaignDeliveryToChatwoot({
+                    phone: result.phone ?? '',
+                    name: contactData?.name ?? null,
+                    campaignName: campaignData.name,
+                    chatwootLabel: campaignData.chatwoot_label ?? null,
+                    templateSnapshot: campaignData.template_snapshot ?? null,
+                    templateVariables: campaignData.template_variables ?? null,
+                  }).catch(err => console.error('[Chatwoot Sync Error]', err))
+                }
+              } catch (e) {
+                console.error('[Chatwoot Sync] falha ao buscar campanha:', e)
+              }
+            }
+
             if (eventId) {
               if (result.reason === 'applied') {
                 await markEventAttempt({
@@ -980,6 +1014,9 @@ export async function POST(request: NextRequest) {
             // Best-effort: don't fail webhook if inbox persist fails
             console.warn('[Webhook] Failed to persist to inbox:', inboxError)
           }
+
+          // Chatwoot: encaminha mensagem entrante em tempo real (best-effort, max 3s)
+          void forwardToChatwoot(body).catch(err => console.error('[Chatwoot Forward]', err))
 
           // =================================================================
           // Workflow Builder (MVP): resume pending conversation if any
