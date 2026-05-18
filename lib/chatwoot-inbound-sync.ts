@@ -30,9 +30,13 @@ async function fetchMetaMedia(
       headers: { Authorization: `Bearer ${accessToken}` },
     })
     const buffer = Buffer.from(await downloadRes.arrayBuffer())
-    const mimeType: string = meta.mime_type || 'application/octet-stream'
+    const rawMime: string = meta.mime_type || 'application/octet-stream'
 
-    const rawExt = mimeType.split('/')[1]?.split(';')[0] || 'bin'
+    // Remove parâmetros de codec: 'audio/ogg; codecs=opus' → 'audio/ogg'
+    // Blobs criados com MIME composto causam falha de reprodução no navegador
+    const mimeType = rawMime.split(';')[0].trim()
+
+    const rawExt = mimeType.split('/')[1] || 'bin'
     const extMap: Record<string, string> = {
       'jpeg': 'jpg', 'x-m4a': 'm4a', 'mpeg': 'mp3', 'ogg': 'ogg',
       'mp4': 'mp4', 'webm': 'webm', 'pdf': 'pdf', 'msword': 'doc',
