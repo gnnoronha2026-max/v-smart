@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, Eye, EyeOff, Info, Loader2, Check, Trash2, ExternalLink } from 'lucide-react';
+import { MessageSquare, Eye, EyeOff, Info, Loader2, Check, Trash2, ExternalLink, FlaskConical, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ChatwootConfig {
@@ -35,6 +35,8 @@ export function ChatwootPanel() {
   const [inboxId, setInboxId] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [showToken, setShowToken] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; results: { api: { ok: boolean; message: string }; webhook: { ok: boolean | null; message: string } } } | null>(null);
 
   const fetchConfig = useCallback(async () => {
     try {
@@ -115,6 +117,20 @@ export function ChatwootPanel() {
     }
   };
 
+  const handleTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch('/api/settings/chatwoot/test', { method: 'POST' });
+      const data = await res.json();
+      setTestResult(data);
+    } catch {
+      setTestResult({ ok: false, results: { api: { ok: false, message: 'Erro de rede ao testar' }, webhook: { ok: null, message: '' } } });
+    } finally {
+      setTesting(false);
+    }
+  };
+
   if (loading) {
     return (
       <section className="glass-panel rounded-2xl p-6">
@@ -151,6 +167,15 @@ export function ChatwootPanel() {
               className="rounded-lg border border-[var(--ds-border-default)] bg-[var(--ds-bg-hover)] px-3 py-1.5 text-xs font-medium text-[var(--ds-text-primary)] transition hover:bg-[var(--ds-bg-surface)]"
             >
               Editar
+            </button>
+            <button
+              type="button"
+              onClick={handleTest}
+              disabled={testing}
+              className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-50"
+            >
+              {testing ? <Loader2 className="size-3 animate-spin" /> : <FlaskConical className="size-3" />}
+              {testing ? 'Testando...' : 'Testar'}
             </button>
             <button
               type="button"
@@ -328,6 +353,48 @@ export function ChatwootPanel() {
       )}
 
       {/* Dica sobre uso */}
+      {/* Resultado do teste */}
+      {testResult && !isEditing && (
+        <div className={`mt-4 rounded-xl border p-4 text-xs space-y-2 ${testResult.ok ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
+          <div className="flex items-center justify-between">
+            <span className={`font-semibold ${testResult.ok ? 'text-emerald-300' : 'text-red-300'}`}>
+              {testResult.ok ? '✓ Conexão OK' : '✗ Problema detectado'}
+            </span>
+            <button type="button" onClick={() => setTestResult(null)} className="text-[var(--ds-text-muted)] hover:text-[var(--ds-text-primary)]">
+              <X className="size-3.5" />
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-start gap-2">
+              <span className={`mt-0.5 shrink-0 font-bold ${testResult.results.api.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                {testResult.results.api.ok ? '✓' : '✗'}
+              </span>
+              <div>
+                <span className="font-medium text-[var(--ds-text-primary)]">API Chatwoot: </span>
+                <span className="text-[var(--ds-text-secondary)]">{testResult.results.api.message}</span>
+              </div>
+            </div>
+            {testResult.results.webhook.ok !== null && (
+              <div className="flex items-start gap-2">
+                <span className={`mt-0.5 shrink-0 font-bold ${testResult.results.webhook.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {testResult.results.webhook.ok ? '✓' : '✗'}
+                </span>
+                <div>
+                  <span className="font-medium text-[var(--ds-text-primary)]">Webhook URL: </span>
+                  <span className="text-[var(--ds-text-secondary)]">{testResult.results.webhook.message}</span>
+                </div>
+              </div>
+            )}
+            {testResult.results.webhook.ok === null && (
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 shrink-0 text-[var(--ds-text-muted)]">—</span>
+                <span className="text-[var(--ds-text-muted)]">{testResult.results.webhook.message}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {config.isConfigured && !isEditing && (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-[var(--ds-border-subtle)] bg-[var(--ds-bg-tertiary)] p-3 text-xs text-[var(--ds-text-secondary)]">
           <Info className="mt-0.5 size-4 shrink-0 text-emerald-300/60" />
