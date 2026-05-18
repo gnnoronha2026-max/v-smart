@@ -101,6 +101,40 @@ export async function postOutgoingMessage(config: ChatwootConfig, conversationId
   }
 }
 
+export async function postIncomingMessage(
+  config: ChatwootConfig,
+  conversationId: number,
+  content: string,
+  attachment?: { buffer: Buffer; fileName: string; mimeType: string }
+): Promise<void> {
+  try {
+    if (attachment) {
+      const formData = new FormData()
+      if (content) formData.append('content', content)
+      formData.append('message_type', 'incoming')
+      formData.append('private', 'false')
+      const blob = new Blob([attachment.buffer], { type: attachment.mimeType })
+      formData.append('attachments[]', blob, attachment.fileName)
+
+      // Não passar Content-Type — o fetch define automaticamente com o boundary do FormData
+      const url = `${config.baseUrl}/api/v1/accounts/${config.accountId}/conversations/${conversationId}/messages`
+      await fetchWithTimeout(url, {
+        method: 'POST',
+        timeoutMs: 15000,
+        headers: { api_access_token: config.apiToken },
+        body: formData as unknown as BodyInit,
+      })
+    } else {
+      await chatwootFetch(config, `/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ content: content || ' ', message_type: 'incoming', private: false }),
+      })
+    }
+  } catch (err) {
+    console.error('[Chatwoot] postIncomingMessage error', err)
+  }
+}
+
 export async function addContactLabels(config: ChatwootConfig, contactId: number, newLabels: string[]): Promise<void> {
   try {
     const getRes = await chatwootFetch(config, `/contacts/${contactId}/labels`)

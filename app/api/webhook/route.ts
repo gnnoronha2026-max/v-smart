@@ -42,9 +42,10 @@ import {
   handleDeliveryStatus,
 } from '@/lib/inbox/inbox-webhook'
 
-// Chatwoot: espelho de campanhas + forward de mensagens entrantes
+// Chatwoot: espelho de campanhas + forward de mensagens entrantes + mídia via API
 import { syncCampaignDeliveryToChatwoot } from '@/lib/chatwoot-sync'
 import { forwardToChatwoot } from '@/lib/chatwoot-forwarder'
+import { syncInboundMediaToChatwoot } from '@/lib/chatwoot-inbound-sync'
 
 // Get WhatsApp Access Token from centralized helper
 async function getWhatsAppAccessToken(): Promise<string | null> {
@@ -585,6 +586,9 @@ export async function POST(request: NextRequest) {
     ? allKeywordWorkflows.filter((w) => w.workflowId !== defaultWorkflowId)
     : allKeywordWorkflows
 
+  // Fila de mensagens de mídia para sync via API ao Chatwoot (processadas após o loop principal)
+  const chatwootMediaQueue: Array<{ from: string; name: string | null; message: any }> = []
+
   try {
     const entries = body.entry || []
 
@@ -1015,7 +1019,18 @@ export async function POST(request: NextRequest) {
             console.warn('[Webhook] Failed to persist to inbox:', inboxError)
           }
 
-          // (forward ao Chatwoot ocorre após o loop — ver chamada awaited abaixo)
+          // Chatwoot: coleta mensagens de mídia para sync via API após o loop
+          if (['image', 'audio', 'video', 'document', 'sticker'].includes(messageType)) {
+            const contactName = (change?.value?.contacts || [])
+              .find((c: any) => c.wa_id === from)?.profile?.name || null
+            chatwootMediaQueue.push({
+              from: normalizePhoneNumber(from) || from,
+              name: contactName,
+              message,
+            })
+          }
+
+          // (forward de texto ao Chatwoot ocorre após o loop — ver chamada awaited abaixo)
 
           // =================================================================
           // Workflow Builder (MVP): resume pending conversation if any
@@ -1639,16 +1654,39 @@ export async function POST(request: NextRequest) {
     console.error('Error processing webhook:', error)
   }
 
-  // Chatwoot: forward awaited para garantir entrega antes do retorno em serverless.
-  // void dentro do loop causa race condition — a função retorna antes do fetch completar.
-  const hasInboundMessages = (body?.entry || []).some((e: any) =>
-    (e?.changes || []).some((c: any) => Array.isArray(c?.value?.messages) && c.value.messages.length > 0)
-  )
-  if (hasInboundMessages) {
-    await forwardToChatwoot({
-      rawBody,
-      signature: request.headers.get('x-hub-signature-256'),
-    }).catch(err => console.error('[Chatwoot Forward]', err))
+  // Chatwoot: texto via webhook + mídia via API, executados em paralelo.
+  // await garante entrega antes do retorno em serverless (void causaria race condition).
+  {
+    const hasInboundMessages = (body?.entry || []).some((e: any) =>
+      (e?.changes || []).some((c: any) => Array.isArray(c?.value?.messages) && c.value.messages.length > 0)
+    )
+
+    const promises: Promise<void>[] = []
+
+    if (hasInboundMessages) {
+      promises.push(
+        forwardToChatwoot({
+          rawBody,
+          signature: request.headers.get('x-hub-signature-256'),
+        }).catch(err => console.error('[Chatwoot Forward]', err))
+      )
+    }
+
+    if (chatwootMediaQueue.length > 0) {
+      const accessToken = await getWhatsAppAccessToken()
+      if (accessToken) {
+        for (const item of chatwootMediaQueue) {
+          promises.push(
+            syncInboundMediaToChatwoot({ ...item, accessToken })
+              .catch(err => console.error('[Chatwoot Media Sync]', err))
+          )
+        }
+      }
+    }
+
+    if (promises.length > 0) {
+      await Promise.allSettled(promises)
+    }
   }
 
   // Always return 200 to acknowledge receipt (Meta requirement)
