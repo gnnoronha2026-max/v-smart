@@ -917,7 +917,7 @@ export async function POST(request: NextRequest) {
               try {
                 const { data: campaignData } = await supabase
                   .from('campaigns')
-                  .select('name, chatwoot_sync, chatwoot_label, template_snapshot, template_variables')
+                  .select('name, chatwoot_sync, chatwoot_label, chatwoot_agent_id, template_snapshot, template_variables')
                   .eq('id', result.campaignId)
                   .single()
 
@@ -934,6 +934,7 @@ export async function POST(request: NextRequest) {
                     name: contactData?.name ?? null,
                     campaignName: campaignData.name,
                     chatwootLabel: campaignData.chatwoot_label ?? null,
+                    chatwootAgentId: campaignData.chatwoot_agent_id ?? null,
                     templateSnapshot: campaignData.template_snapshot ?? null,
                     templateVariables: campaignData.template_variables ?? null,
                   })

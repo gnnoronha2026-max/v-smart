@@ -126,6 +126,7 @@ export interface Campaign {
   // Integração Chatwoot
   chatwootSync?: boolean;
   chatwootLabel?: string | null;
+  chatwootAgentId?: number | null;
 }
 
 export interface Contact {

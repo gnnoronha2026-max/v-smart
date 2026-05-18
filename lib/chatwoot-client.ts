@@ -158,6 +158,17 @@ export async function addContactLabels(config: ChatwootConfig, contactId: number
   }
 }
 
+export async function assignConversationAgent(config: ChatwootConfig, conversationId: number, agentId: number): Promise<void> {
+  try {
+    await chatwootFetch(config, `/conversations/${conversationId}/assignments`, {
+      method: 'POST',
+      body: JSON.stringify({ assignee_id: agentId }),
+    })
+  } catch (err) {
+    console.error('[Chatwoot] assignConversationAgent error', err)
+  }
+}
+
 export async function addConversationLabels(config: ChatwootConfig, conversationId: number, labels: string[]): Promise<void> {
   try {
     const getRes = await chatwootFetch(config, `/conversations/${conversationId}/labels`)

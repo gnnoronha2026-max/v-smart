@@ -131,6 +131,7 @@ export const CreateCampaignSchema = z.object({
   // Integração Chatwoot
   chatwootSync: z.boolean().optional().default(false),
   chatwootLabel: z.string().optional().nullable(),
+  chatwootAgentId: z.number().int().positive().optional().nullable(),
 })
 
 export const UpdateCampaignSchema = z.object({

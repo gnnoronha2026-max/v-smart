@@ -84,8 +84,11 @@ export const useCampaignNewController = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const [chatwootSync, setChatwootSync] = useState(false)
   const [chatwootLabel, setChatwootLabel] = useState('')
+  const [chatwootAgentId, setChatwootAgentId] = useState<number | null>(null)
   const [chatwootLabels, setChatwootLabels] = useState<string[]>([])
   const [chatwootLabelsLoading, setChatwootLabelsLoading] = useState(false)
+  const [chatwootAgents, setChatwootAgents] = useState<{ id: number; name: string }[]>([])
+  const [chatwootAgentsLoading, setChatwootAgentsLoading] = useState(false)
   const userTimeZone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, [])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [templateVars, setTemplateVars] = useState<{ header: TemplateVar[]; body: TemplateVar[] }>({
@@ -142,15 +145,23 @@ export const useCampaignNewController = () => {
     setSelectedStates([])
   }, [selectedCountries, selectedStates])
 
-  // Busca etiquetas disponíveis no Chatwoot quando o toggle é ativado
+  // Busca etiquetas e agentes disponíveis no Chatwoot quando o toggle é ativado
   useEffect(() => {
     if (!chatwootSync) return
+
     setChatwootLabelsLoading(true)
     fetch('/api/settings/chatwoot/labels')
       .then(r => r.json())
       .then(data => setChatwootLabels(Array.isArray(data?.labels) ? data.labels : []))
       .catch(() => setChatwootLabels([]))
       .finally(() => setChatwootLabelsLoading(false))
+
+    setChatwootAgentsLoading(true)
+    fetch('/api/settings/chatwoot/agents')
+      .then(r => r.json())
+      .then(data => setChatwootAgents(Array.isArray(data?.agents) ? data.agents : []))
+      .catch(() => setChatwootAgents([]))
+      .finally(() => setChatwootAgentsLoading(false))
   }, [chatwootSync])
 
   const templatesQuery = useQuery({
@@ -729,6 +740,7 @@ export const useCampaignNewController = () => {
         folderId: selectedFolderId,
         chatwootSync,
         chatwootLabel: chatwootLabel.trim() || null,
+        chatwootAgentId: chatwootAgentId ?? null,
       })
 
       router.push(`/campaigns/${campaign.id}`)
@@ -774,6 +786,7 @@ export const useCampaignNewController = () => {
         folderId: selectedFolderId,
         chatwootSync,
         chatwootLabel: chatwootLabel.trim() || null,
+        chatwootAgentId: chatwootAgentId ?? null,
         isDraft: true, // <-- Salva como rascunho
       })
 
@@ -1595,8 +1608,12 @@ export const useCampaignNewController = () => {
     setChatwootSync,
     chatwootLabel,
     setChatwootLabel,
+    chatwootAgentId,
+    setChatwootAgentId,
     chatwootLabels,
     chatwootLabelsLoading,
+    chatwootAgents,
+    chatwootAgentsLoading,
 
     // Launch
     isLaunching,

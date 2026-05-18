@@ -36,6 +36,7 @@ interface CreateCampaignInput {
   // Integração Chatwoot
   chatwootSync?: boolean;
   chatwootLabel?: string | null;
+  chatwootAgentId?: number | null;
   // Se true, salva como rascunho sem disparar
   isDraft?: boolean;
 }

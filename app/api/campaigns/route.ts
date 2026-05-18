@@ -123,6 +123,7 @@ export async function POST(request: Request) {
       folderId: data.folderId,  // Organização por pasta
       chatwootSync: data.chatwootSync,
       chatwootLabel: data.chatwootLabel,
+      chatwootAgentId: data.chatwootAgentId,
     })
 
     // If contacts were provided, add them to campaign_contacts

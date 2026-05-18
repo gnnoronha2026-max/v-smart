@@ -5,6 +5,7 @@ import {
   postOutgoingMessage,
   addContactLabels,
   addConversationLabels,
+  assignConversationAgent,
 } from '@/lib/chatwoot-client'
 
 export interface CampaignDeliverySyncParams {
@@ -12,6 +13,7 @@ export interface CampaignDeliverySyncParams {
   name: string | null
   campaignName: string
   chatwootLabel: string | null
+  chatwootAgentId: number | null
   /** Template object do banco (template_snapshot) */
   templateSnapshot: any | null
   /** Variáveis da campanha { header: string[], body: string[], buttons? } */
@@ -40,7 +42,7 @@ function renderTemplateBody(
 }
 
 export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyncParams): Promise<void> {
-  const { phone, name, campaignName, chatwootLabel, templateSnapshot, templateVariables } = params
+  const { phone, name, campaignName, chatwootLabel, chatwootAgentId, templateSnapshot, templateVariables } = params
 
   const config = await getChatwootConfig()
   if (!config) {
@@ -74,5 +76,9 @@ export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyn
 
   if (chatwootLabel) {
     await addContactLabels(config, contactId, [chatwootLabel])
+  }
+
+  if (chatwootAgentId) {
+    await assignConversationAgent(config, conversationId, chatwootAgentId)
   }
 }

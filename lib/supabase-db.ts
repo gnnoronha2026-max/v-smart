@@ -299,6 +299,7 @@ export const campaignDb = {
         folderId?: string | null
         chatwootSync?: boolean
         chatwootLabel?: string | null
+        chatwootAgentId?: number | null
     }): Promise<Campaign> => {
         const id = generateId()
         const now = new Date().toISOString()
@@ -332,6 +333,7 @@ export const campaignDb = {
                 folder_id: campaign.folderId ?? null,
                 chatwoot_sync: campaign.chatwootSync ?? false,
                 chatwoot_label: campaign.chatwootLabel ?? null,
+                chatwoot_agent_id: campaign.chatwootAgentId ?? null,
             })
             .select()
             .single()
@@ -358,6 +360,7 @@ export const campaignDb = {
             flowName: campaign.flowName ?? null,
             chatwootSync: campaign.chatwootSync ?? false,
             chatwootLabel: campaign.chatwootLabel ?? null,
+            chatwootAgentId: campaign.chatwootAgentId ?? null,
         }
     },
 

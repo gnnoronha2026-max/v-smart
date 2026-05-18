@@ -1,7 +1,8 @@
 ﻿-- Integração com Chatwoot: espelho de campanhas e forward de eventos
 ALTER TABLE public.campaigns
   ADD COLUMN IF NOT EXISTS chatwoot_sync boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS chatwoot_label text DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS chatwoot_label text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS chatwoot_agent_id integer DEFAULT NULL;
 
 -- Settings para conexão com Chatwoot
 -- Inserir via painel do Supabase ou substituir os valores abaixo

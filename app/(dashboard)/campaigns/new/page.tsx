@@ -1453,6 +1453,31 @@ export default function CampaignsNewRealPage() {
                   <p className="text-xs text-[var(--ds-text-muted)]">Etiqueta aplicada ao contato e à conversa no Chatwoot ao confirmar entrega.</p>
                 </div>
               )}
+              {ctrl.chatwootSync && (
+                <div className="mt-3 space-y-1">
+                  <label className="text-xs font-medium text-[var(--ds-text-secondary)]">Atribuir agente (opcional)</label>
+                  {ctrl.chatwootAgentsLoading ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-[var(--ds-border-default)] bg-[var(--ds-bg-elevated)] px-3 py-2">
+                      <span className="size-3 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                      <span className="text-sm text-[var(--ds-text-muted)]">Carregando agentes…</span>
+                    </div>
+                  ) : ctrl.chatwootAgents.length > 0 ? (
+                    <select
+                      value={ctrl.chatwootAgentId ?? ''}
+                      onChange={(e) => ctrl.setChatwootAgentId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full rounded-lg border border-[var(--ds-border-default)] bg-[var(--ds-bg-elevated)] px-3 py-2 text-sm text-[var(--ds-text-primary)] outline-none transition focus:border-emerald-500/40 focus:ring-2 focus:ring-emerald-500/10"
+                    >
+                      <option value="">— Nenhum agente —</option>
+                      {ctrl.chatwootAgents.map((agent) => (
+                        <option key={agent.id} value={agent.id}>{agent.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-xs text-[var(--ds-text-muted)] italic">Nenhum agente encontrado. Verifique a conexão com o Chatwoot nas configurações.</p>
+                  )}
+                  <p className="text-xs text-[var(--ds-text-muted)]">Agente responsável atribuído à conversa no Chatwoot ao confirmar entrega.</p>
+                </div>
+              )}
             </div>
           )}
 
