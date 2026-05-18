@@ -1,4 +1,4 @@
-﻿import {
+import {
   getChatwootConfig,
   findOrCreateContact,
   findOrCreateConversation,
@@ -6,8 +6,6 @@
   addContactLabels,
   addConversationLabels,
 } from '@/lib/chatwoot-client'
-import { renderTemplatePreviewText } from '@/lib/whatsapp/template-contract'
-import type { ResolvedTemplateValues } from '@/lib/whatsapp/template-contract'
 
 export interface CampaignDeliverySyncParams {
   phone: string
@@ -20,17 +18,25 @@ export interface CampaignDeliverySyncParams {
   templateVariables: { header?: string[]; body?: string[] } | null
 }
 
-function buildResolvedValues(
-  templateVariables: { header?: string[]; body?: string[] } | null
-): ResolvedTemplateValues {
-  return {
-    body: (templateVariables?.body ?? []).map((text, i) => ({ key: String(i + 1), text })),
-    header: (templateVariables?.header ?? []).map((text, i) => ({ key: String(i + 1), text })),
-  }
-}
+function renderTemplateBody(
+  templateSnapshot: any,
+  bodyValues: string[]
+): string {
+  try {
+    const components: any[] = templateSnapshot?.components ?? []
+    const bodyComponent = components.find(
+      (c: any) => String(c?.type || '').toUpperCase() === 'BODY'
+    )
+    if (!bodyComponent?.text) return ''
 
-function buildFallbackContent(campaignName: string): string {
-  return `[Campanha: ${campaignName}]`
+    let text: string = bodyComponent.text
+    bodyValues.forEach((value, idx) => {
+      text = text.replace(new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'), value)
+    })
+    return text
+  } catch {
+    return ''
+  }
 }
 
 export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyncParams): Promise<void> {
@@ -44,13 +50,10 @@ export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyn
 
   let content: string
   if (templateSnapshot) {
-    try {
-      content = renderTemplatePreviewText(templateSnapshot, buildResolvedValues(templateVariables))
-    } catch {
-      content = buildFallbackContent(campaignName)
-    }
+    const rendered = renderTemplateBody(templateSnapshot, templateVariables?.body ?? [])
+    content = rendered || `[Campanha: ${campaignName}]`
   } else {
-    content = buildFallbackContent(campaignName)
+    content = `[Campanha: ${campaignName}]`
   }
 
   const contactId = await findOrCreateContact(config, phone, name || phone)
