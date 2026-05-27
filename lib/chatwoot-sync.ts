@@ -75,11 +75,15 @@ export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyn
   await postOutgoingMessage(config, conversationId, content, { private: true })
 
   if (chatwootLabel) {
+    console.log(`[Chatwoot Sync] aplicando etiqueta "${chatwootLabel}" → contato ${contactId}, conversa ${conversationId}`)
     // Garante que a label existe na conta antes de aplicá-la
     // (Chatwoot ignora silenciosamente labels não registradas)
     await ensureAccountLabelExists(config, chatwootLabel)
     await addContactLabels(config, contactId, [chatwootLabel])
     await addConversationLabels(config, conversationId, [chatwootLabel])
+    console.log(`[Chatwoot Sync] etiqueta "${chatwootLabel}" processada`)
+  } else {
+    console.log(`[Chatwoot Sync] sem etiqueta configurada (chatwootLabel=${JSON.stringify(chatwootLabel)})`)
   }
 
   if (chatwootAgentId) {
