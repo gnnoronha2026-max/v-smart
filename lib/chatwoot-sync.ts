@@ -6,6 +6,7 @@ import {
   addContactLabels,
   addConversationLabels,
   assignConversationAgent,
+  ensureAccountLabelExists,
 } from '@/lib/chatwoot-client'
 
 export interface CampaignDeliverySyncParams {
@@ -74,6 +75,9 @@ export async function syncCampaignDeliveryToChatwoot(params: CampaignDeliverySyn
   await postOutgoingMessage(config, conversationId, content, { private: true })
 
   if (chatwootLabel) {
+    // Garante que a label existe na conta antes de aplicá-la
+    // (Chatwoot ignora silenciosamente labels não registradas)
+    await ensureAccountLabelExists(config, chatwootLabel)
     await addContactLabels(config, contactId, [chatwootLabel])
     await addConversationLabels(config, conversationId, [chatwootLabel])
   }

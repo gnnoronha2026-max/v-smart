@@ -144,15 +144,55 @@ export async function postIncomingMessage(
   }
 }
 
+/**
+ * Garante que uma etiqueta existe na conta do Chatwoot.
+ * O Chatwoot ignora silenciosamente labels não cadastradas — é necessário
+ * criá-las antes de aplicá-las a contatos/conversas.
+ */
+export async function ensureAccountLabelExists(config: ChatwootConfig, labelTitle: string): Promise<void> {
+  try {
+    const listRes = await chatwootFetch(config, '/labels', { timeoutMs: 8000 })
+    const listData = await safeJson<any>(listRes)
+    const existing: any[] = listData?.payload ?? []
+    const alreadyExists = existing.some(
+      (l: any) => String(l?.title ?? '').toLowerCase() === labelTitle.toLowerCase()
+    )
+    if (alreadyExists) return
+
+    // Cria a label com cor padrão azul
+    const createRes = await chatwootFetch(config, '/labels', {
+      method: 'POST',
+      timeoutMs: 8000,
+      body: JSON.stringify({
+        title: labelTitle,
+        color: '#1F93FF',
+        show_on_sidebar: true,
+        description: `Etiqueta criada automaticamente pela campanha`,
+      }),
+    })
+    if (!createRes.ok) {
+      const errBody = await safeJson<any>(createRes)
+      console.warn('[Chatwoot] ensureAccountLabelExists: falha ao criar label', labelTitle, createRes.status, errBody)
+    }
+  } catch (err) {
+    console.error('[Chatwoot] ensureAccountLabelExists error', err)
+  }
+}
+
 export async function addContactLabels(config: ChatwootConfig, contactId: number, newLabels: string[]): Promise<void> {
   try {
     const getRes = await chatwootFetch(config, `/contacts/${contactId}/labels`)
-    const existing: string[] = (await safeJson<any>(getRes))?.payload ?? []
+    const getBody = await safeJson<any>(getRes)
+    const existing: string[] = getBody?.payload ?? []
     const merged = Array.from(new Set([...existing, ...newLabels]))
-    await chatwootFetch(config, `/contacts/${contactId}/labels`, {
+    const postRes = await chatwootFetch(config, `/contacts/${contactId}/labels`, {
       method: 'POST',
       body: JSON.stringify({ labels: merged }),
     })
+    if (!postRes.ok) {
+      const errBody = await safeJson<any>(postRes)
+      console.warn('[Chatwoot] addContactLabels: resposta não-OK', postRes.status, errBody)
+    }
   } catch (err) {
     console.error('[Chatwoot] addContactLabels error', err)
   }
@@ -172,12 +212,17 @@ export async function assignConversationAgent(config: ChatwootConfig, conversati
 export async function addConversationLabels(config: ChatwootConfig, conversationId: number, labels: string[]): Promise<void> {
   try {
     const getRes = await chatwootFetch(config, `/conversations/${conversationId}/labels`)
-    const existing: string[] = (await safeJson<any>(getRes))?.payload ?? []
+    const getBody = await safeJson<any>(getRes)
+    const existing: string[] = getBody?.payload ?? []
     const merged = Array.from(new Set([...existing, ...labels]))
-    await chatwootFetch(config, `/conversations/${conversationId}/labels`, {
+    const postRes = await chatwootFetch(config, `/conversations/${conversationId}/labels`, {
       method: 'POST',
       body: JSON.stringify({ labels: merged }),
     })
+    if (!postRes.ok) {
+      const errBody = await safeJson<any>(postRes)
+      console.warn('[Chatwoot] addConversationLabels: resposta não-OK', postRes.status, errBody)
+    }
   } catch (err) {
     console.error('[Chatwoot] addConversationLabels error', err)
   }
