@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
   const [campaignResult, initialTemplate] = await Promise.all([
     supabase
       .from('campaigns')
-      .select('status, scheduled_date, template_variables, template_spec_hash')
+      .select('status, scheduled_date, template_variables, template_spec_hash, chatwoot_sync, chatwoot_label, chatwoot_agent_id, name')
       .eq('id', campaignId)
       .single(),
     templateDb.getByName(templateName),

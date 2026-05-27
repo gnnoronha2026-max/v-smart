@@ -184,7 +184,7 @@ export const campaignService = {
     }),
 
   create: async (input: CreateCampaignInput): Promise<Campaign> => {
-    const { name, templateName, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, flowId, flowName, folderId, isDraft } = input;
+    const { name, templateName, recipients, selectedContacts, selectedContactIds, scheduledAt, templateVariables, flowId, flowName, folderId, isDraft, chatwootSync, chatwootLabel, chatwootAgentId } = input;
 
     // 1. Create campaign in Database (source of truth) with contacts
     const newCampaign = await api.post<Campaign>('/api/campaigns', {
@@ -199,6 +199,10 @@ export const campaignService = {
       flowId,   // Flow/MiniApp ID (se template usar Flow)
       flowName, // Flow name para exibição
       folderId, // Organização por pasta
+      // Integração Chatwoot: persistir na campanha para o workflow ler no dispatch
+      chatwootSync: chatwootSync ?? false,
+      chatwootLabel: chatwootLabel ?? null,
+      chatwootAgentId: chatwootAgentId ?? null,
     });
 
     // 2. If saving as draft, don't dispatch - keep as DRAFT status

@@ -739,7 +739,7 @@ export const useCampaignNewController = () => {
         flowName,
         folderId: selectedFolderId,
         chatwootSync,
-        chatwootLabel: chatwootLabel.trim() || null,
+        chatwootLabel: String(chatwootLabel || '').trim() || null,
         chatwootAgentId: chatwootAgentId ?? null,
       })
 
@@ -785,7 +785,7 @@ export const useCampaignNewController = () => {
         flowName,
         folderId: selectedFolderId,
         chatwootSync,
-        chatwootLabel: chatwootLabel.trim() || null,
+        chatwootLabel: String(chatwootLabel || '').trim() || null,
         chatwootAgentId: chatwootAgentId ?? null,
         isDraft: true, // <-- Salva como rascunho
       })
